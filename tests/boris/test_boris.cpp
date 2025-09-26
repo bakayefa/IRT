@@ -14,21 +14,21 @@ void uniform_bz()
     particle.v[1]        = 2.0;
     particle.v[2]        = 0.0;
     particle.weight      = 1.0;
-    particle.mass        = 1.0;
-    particle.charge      = 1.0;
+    particle.mass        = 1.0; // NB: usually normalized by proton mass
+    particle.charge      = 1.0; // NB: 1 e charge
     std::vector<Particle<1>> particles{particle};
 
     double time                     = 0.;
     double final_time               = 3.141592 * 4;
     double dt                       = 0.001;
-    std::size_t constexpr dimension = 1;
+    std::size_t constexpr dimension = 1; // NB: size_t is unsigned and store the maximum size of a theoretically possible array or an object
 
     std::array<std::size_t, dimension> grid_size = {1000};
     std::array<double, dimension> cell_size      = {0.1};
     auto constexpr nbr_ghosts                    = 1;
-    auto layout = std::make_shared<GridLayout<dimension>>(grid_size, cell_size, nbr_ghosts);
+    auto layout = std::make_shared<GridLayout<dimension>>(grid_size, cell_size, nbr_ghosts); //malloc
 
-    VecField<dimension> E{layout, {Quantity::Ex, Quantity::Ey, Quantity::Ez}};
+    VecField<dimension> E{layout, {Quantity::Ex, Quantity::Ey, Quantity::Ez}}; // NB: layout tells VecField where the components are 
     VecField<dimension> B{layout, {Quantity::Bx, Quantity::By, Quantity::Bz}};
 
 
@@ -64,7 +64,7 @@ void uniform_bz()
         {
             particle.position[0] -= layout->dom_size(Direction::X);
         }
-        else if (iCell < layout->dual_dom_end(Direction::X))
+        else if (iCell < layout->dual_dom_start(Direction::X))
         {
             particle.position[0] += layout->dom_size(Direction::X);
         }
