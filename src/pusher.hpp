@@ -52,10 +52,8 @@ public:
             auto dx = this->layout_->cell_size(Direction::X); 
             auto dt = this->dt_;
 
-            
             particle.position[0] += particle.v[0]*dt;
                     
-            
             auto iCell = static_cast<int>(particle.position[0] / dx); // (taken from layout mesh size) 
             auto remainder = (particle.position[0] / dx) - iCell;
 
@@ -68,13 +66,33 @@ public:
             auto Bz = interpolate(B.z, iCell, remainder);
 
             auto factor = (particle.charge*dt)/(2*particle.mass);
-            // auto vminus = particle.velocity[0] + factor*E.x;
-            // auto t = ((particle.charge*dt)/(2*particle.mass))*B;
-
-            auto vminus = particle.v[0] + factor * Ex;
-            auto vplus  = vminus;  
             
-            particle.v[0] = vplus + factor*Ex;
+            auto vminus_x = particle.v[0] + factor * Ex;
+            auto vminus_y = particle.v[1] + factor * Ey;
+            auto vminus_z = particle.v[2] + factor * Ez;
+            
+            auto t_x = factor*Bx;
+            auto t_y = factor*By;
+            auto t_z = factor*Bz;
+
+            auto vprime_x = vminus_x + (vminus_y * t_z - vminus_z * t_y);
+            auto vprime_y = vminus_y - (vminus_x * t_z - vminus_z * t_x);
+            auto vprime_z = vminus_z + (vminus_x * t_y - vminus_y * t_x);
+
+            auto t_2 = t_x*t_x + t_y*t_y + t_z*t_z;
+            
+            auto s_x = 2*t_x/(1+t_2);
+            auto s_y = 2*t_y/(1+t_2);
+            auto s_z = 2*t_z/(1+t_2);
+
+            auto vplus_x = vminus_x + (vprime_y * s_z - vprime_z * s_y); 
+            auto vplus_y = vminus_y - (vprime_x * s_z - vprime_z * s_x);
+            auto vplus_z = vminus_z + (vprime_x * s_y - vprime_y * s_x);
+            
+            particle.v[0] = vplus_x + factor*Ex;
+            particle.v[1] = vplus_y + factor*Ey;
+            particle.v[2] = vplus_z + factor*Ez;
+            
             particle.position[0] += particle.v[0] * (dt/2);
 
         }
