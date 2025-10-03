@@ -32,13 +32,20 @@ public:
             auto& Jy = J.y();
             auto& Jz = J.z();
 
-            std::size_t N = Bx.data().size();  
-            // For each grid point but Avoid first and last cells
-            for (std::size_t ix = 1; ix < N-1; ++ix)            
-            {
+            // Ex, Jx are dual in x
+            for (auto ix = m_grid->dual_dom_start(Direction::X);
+                 ix <= m_grid->dual_dom_end(Direction::X); ++ix)
+            { 
                 Jx(ix) = 0.0;
-                Jy(ix) = -(Bz(ix+1) - Bz(ix-1)) / (2*dx);
-                Jz(ix) =  (By(ix+1) - By(ix-1)) / (2*dx);
+            }
+
+            // Ey, Ez, Jx, Jz are in primal.
+            // Bz, By are in dual. 
+            for (auto ix = m_grid->primal_dom_start(Direction::X);
+                 ix <= m_grid->primal_dom_end(Direction::X); ++ix)
+            {
+                Jy(ix) = -(Bz(ix) - Bz(ix-1)) / (dx);
+                Jz(ix) =  (By(ix) - By(ix-1)) / (dx);
             }
 
         }

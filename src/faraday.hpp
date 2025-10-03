@@ -23,6 +23,8 @@ public:
 
     void operator()(VecField<dimension> const& E, VecField<dimension> const& B, VecField<dimension> Bnew)
     {
+        // Ex is dual in x
+        // Ey is primal in x, so is Ez
         auto const dx = m_grid->cell_size(Direction::X);
 
         if constexpr (dimension == 1)
@@ -39,14 +41,20 @@ public:
             auto& Bnew_x = Bnew.x();
             auto& Bnew_y = Bnew.y();
             auto& Bnew_z = Bnew.z();
-
-            std::size_t N = Bx.data().size();  
-            // For each grid point but Avoid first and last cells
-            for (std::size_t ix = 1; ix < N-1; ++ix)            
+            
+            // Bx is in primal
+            for (auto ix = m_grid->primal_dom_start(Direction::X);
+                 ix <= m_grid->primal_dom_end(Direction::X); ++ix)
             {
                 Bnew_x(ix) = Bx(ix);
-                Bnew_y(ix) = By(ix) + (Ez(ix+1) - Ez(ix-1))/ (2.0 * dx);
-                Bnew_z(ix) = Bz(ix) - (Ey(ix+1) - Ey(ix-1))/ (2.0 * dx);
+            }
+
+            // By, Bz are in dual
+            for (auto ix = m_grid->dual_dom_start(Direction::X);
+                 ix <= m_grid->dual_dom_end(Direction::X); ++ix)
+            {
+                Bnew_y(ix) = By(ix) + (Ez(ix) - Ez(ix-1))/ (dx);
+                Bnew_z(ix) = Bz(ix) - (Ey(ix) - Ey(ix-1))/ (dx);
             }
 
         }
