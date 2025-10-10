@@ -24,13 +24,13 @@ public:
         if constexpr (dimension == 1)
         {
             // TODO your code here
-            auto const& Bx = B.x();
-            auto const& By = B.y();
-            auto const& Bz = B.z();
+            auto const& Bx = B.x;
+            auto const& By = B.y;
+            auto const& Bz = B.z;
             
-            auto& Jx = J.x();
-            auto& Jy = J.y();
-            auto& Jz = J.z();
+            auto& Jx = J.x;
+            auto& Jy = J.y;
+            auto& Jz = J.z;
 
             // Ex, Jx are dual in x
             for (auto ix = m_grid->dual_dom_start(Direction::X);

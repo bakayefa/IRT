@@ -28,6 +28,13 @@ template<std::size_t dimension>
 void average(Field<dimension> const& F1, Field<dimension> const& F2, Field<dimension>& Favg)
 {
     // use std::transform to do an average of F1 and F2
+    // for (std::size_t i = 0; i < F1.data().size(); ++i)
+    //     Favg(i) = 0.5 * (F1(i) + F2(i));
+    std::transform(F1.data().begin(), F1.data().end(),
+                   F2.data().begin(),
+                   Favg.data().begin(),
+                   [](auto const& a, auto const& b) { return 0.5 * (a + b); });
+    // std::transform is used to clearly, safely, and efficiently apply a function element-wise to one or more containers without manual loops.
 }
 
 
@@ -125,11 +132,10 @@ int main()
     magnetic_init(B, *layout);
     boundary_condition->fill(B);
 
-    // Faraday<dimension> faraday{layout, dt};  // TODO uncomment when Faraday is implemented
+    Faraday<dimension> faraday{layout, dt};  // TODO uncomment when Faraday is implemented
     Ampere<dimension> ampere{layout};
     Ohm<dimension> ohm{layout};
     Boris<dimension> push{layout, dt};
-
 
 
     ampere(B, J);
@@ -154,12 +160,36 @@ int main()
         std::cout << "Time: " << time << " / " << final_time << "\n";
 
         // TODO implement ICN temporal integration
+        faraday(E, B, Bnew);
+        boundary_condition->fill(Bnew);
 
+        ampere(B, J);
+        boundary_condition->fill(J);
+
+        for (auto& pop : populations)
+        {
+            pop.deposit();
+            boundary_condition->fill(pop.flux());
+            boundary_condition->fill(pop.density());
+        }
+        total_density(populations, N);
+        bulk_velocity<dimension>(populations, N, V);
+        
+        ohm(Bnew, J, N, V, E);
+        boundary_condition->fill(E);
+
+        //take average of E B 
+        average(E, Enew, Eavg);
+        average(B, Bnew, Bavg);
+
+        E = Eavg;
+        B = Bavg;
+        
 
         time += dt;
         diags_write_fields(B, E, V, N, time);
         std::cout << "**********************************\n";
-        // diags_write_particles(populations, time);
+        diags_write_particles(populations, time);
     }
 
 

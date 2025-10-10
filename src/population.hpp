@@ -55,7 +55,7 @@ public:
     }
 
 
-    void load_particles(int nppc, auto density)
+    void load_particles(int nppc, auto density) //nppc stands for “number of particles per cell.
     {
         static_assert(dimension == 1, "Population only implemented for 1D");
         auto randGen = getRNG(std::nullopt);
