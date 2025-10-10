@@ -22,18 +22,12 @@
 #include <algorithm>
 
 
-
-
 template<std::size_t dimension>
 void average(Field<dimension> const& F1, Field<dimension> const& F2, Field<dimension>& Favg)
 {
     // use std::transform to do an average of F1 and F2
-    // for (std::size_t i = 0; i < F1.data().size(); ++i)
-    //     Favg(i) = 0.5 * (F1(i) + F2(i));
-    std::transform(F1.data().begin(), F1.data().end(),
-                   F2.data().begin(),
-                   Favg.data().begin(),
-                   [](auto const& a, auto const& b) { return 0.5 * (a + b); });
+    std::transform(F1.begin(), F1.end(), F2.begin(), Favg.begin(), 
+        [](double a, double b) {return 0.5*(a+b);}) ;
     // std::transform is used to clearly, safely, and efficiently apply a function element-wise to one or more containers without manual loops.
 }
 
@@ -162,29 +156,45 @@ int main()
         // TODO implement ICN temporal integration
         faraday(E, B, Bnew);
         boundary_condition->fill(Bnew);
+        // std::cout << " Faraday implemented \n";
+
 
         ampere(B, J);
         boundary_condition->fill(J);
+        // std::cout << " Ampere implemented \n";
+
 
         for (auto& pop : populations)
         {
             pop.deposit();
+            // std::cout << " pop deposit \n";
             boundary_condition->fill(pop.flux());
+            // std::cout << " boundary coundition flux \n";
             boundary_condition->fill(pop.density());
+            // std::cout << " boundary coundition density \n";
+
         }
+        
         total_density(populations, N);
+        // std::cout << " total density \n";
         bulk_velocity<dimension>(populations, N, V);
+        // std::cout << " bulk velocity \n";
+
         
         ohm(Bnew, J, N, V, E);
+        // std::cout << " ohm \n";
         boundary_condition->fill(E);
+        // std::cout << " boundary coundition after ohm \n";
+
 
         //take average of E B 
         average(E, Enew, Eavg);
+        // std::cout << " average of E \n";
         average(B, Bnew, Bavg);
+        // std::cout << " average of B \n";
 
         E = Eavg;
         B = Bavg;
-        
 
         time += dt;
         diags_write_fields(B, E, V, N, time);
